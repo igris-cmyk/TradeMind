@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tabular numbers for financial data */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Custom scrollbar — minimal, premium */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/[0.08] rounded-full;
+    transition: background 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/[0.15];
+  }
+
+  /* Focus ring — consistent across all elements */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* ─── Glass Card System ──────────────────────────────────── */
+  
+  .glass-card {
+    @apply relative overflow-hidden rounded-xl border border-white/[0.06] bg-glass shadow-glass;
+    backdrop-filter: blur(16px) saturate(1.2);
+  }
+
+  .glass-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+  }
+
+  .glass-card:hover {
+    @apply border-white/[0.1] shadow-glass-hover;
+  }
+
+  /* Elevated glass — for modals, popovers, command palette */
+  .glass-card-elevated {
+    @apply relative overflow-hidden rounded-xl border border-white/[0.08] shadow-elevation-3;
+    background: rgba(15, 17, 25, 0.92);
+    backdrop-filter: blur(24px) saturate(1.3);
+  }
+
+  .glass-card-elevated::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    );
+  }
+
+  /* ─── Shimmer Skeleton ───────────────────────────────────── */
+  
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-white/[0.04];
+  }
+
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.03),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* ─── Gradient Text ──────────────────────────────────────── */
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 via-primary-300 to-accent-green bg-clip-text text-transparent;
+  }
+
+  .gradient-text-subtle {
+    @apply bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent;
+  }
+
+  /* ─── Gradient Orbs (background decoration) ──────────────── */
+  
+  .gradient-orb {
+    @apply absolute rounded-full blur-3xl opacity-15 pointer-events-none;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.4), transparent 70%);
+  }
+
+  /* ─── Status Badges ──────────────────────────────────────── */
+  
+  .badge-win {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-green/10 text-accent-green border border-accent-green/20;
+  }
+
+  .badge-loss {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-red/10 text-accent-red border border-accent-red/20;
+  }
+
+  .badge-neutral {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary-300 border border-primary/20;
+  }
+
+  /* ─── Data Display ───────────────────────────────────────── */
+  
+  .data-positive {
+    @apply text-accent-green font-mono font-semibold tabular-nums;
+  }
+
+  .data-negative {
+    @apply text-accent-red font-mono font-semibold tabular-nums;
+  }
+
+  .data-neutral {
+    @apply text-muted-foreground font-mono tabular-nums;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Premium typography scale (4px rhythm) */
+  .type-display {
+    @apply text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1];
+  }
+
+  .type-h1 {
+    @apply text-2xl font-semibold tracking-tight leading-tight;
+  }
+
+  .type-h2 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .type-h3 {
+    @apply text-base font-semibold tracking-tight;
+  }
+
+  .type-body {
+    @apply text-sm leading-relaxed;
+  }
+
+  .type-caption {
+    @apply text-xs text-muted-foreground leading-normal;
+  }
+
+  .type-mono-data {
+    @apply font-mono text-sm font-semibold tabular-nums;
+  }
+
+  .type-label {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+}
+
+/* ─── Keyframe: shimmer (used by skeleton) ──────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

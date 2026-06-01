@@ -1,0 +1,287 @@
+// TradeMind AI Journal — Prisma Schema
+// All models defined for schema stability across phases
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth.js Models ──────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+
+  plan             String  @default("FREE") // FREE | PRO | ELITE
+  role             String  @default("USER") // USER | ADMIN
+  stripeCustomerId String? @unique
+  settings         Json?
+  
+  // Phase 3: Cognitive Identity
+  identityMetrics  Json?   // { executionIntegrity, emotionalStability, riskConsistency, cognitiveControl, recoveryRate }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  onboardingProfile OnboardingProfile?
+  trades            Trade[]
+  strategies        Strategy[]
+  journalEntries    JournalEntry[]
+  insights             Insight[]
+  subscription         Subscription?
+  milestoneUnlocks     MilestoneUnlock[]
+  disciplineSnapshots  DisciplineSnapshot[]
+  sessionRecaps        SessionRecap[]
+  behaviorMemories     BehaviorMemory[]
+  coachingSessions     CoachingSession[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Application Models ──────────────────────────────────────
+
+model OnboardingProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  tradingStyle String
+  markets      String[]
+  experience   String
+  strategies   String[]
+  goals        String[]
+  sessions     String[]
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Trade {
+  id           String   @id @default(cuid())
+  userId       String
+  pair         String
+  direction    String // LONG | SHORT
+  entry        Float
+  stopLoss     Float
+  takeProfit   Float
+  riskPercent  Float?
+  riskAmount   Float?
+  session      String?
+  strategyTags String[]
+  notes        String?  @db.Text
+  emotions     String[]
+  screenshots  String[]
+  pnl          Float?
+  rrAchieved   Float?
+  status       String   @default("OPEN") // WIN | LOSS | BREAKEVEN | OPEN
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // ─── Phase 2: Behavioral Intelligence Metadata ────
+  emotionBefore   Json?   // { confidence: 0-10, fear: 0-10, greed: 0-10, ... }
+  emotionAfter    Json?   // { satisfaction: 0-10, frustration: 0-10, regret: 0-10, ... }
+  marketContext   Json?   // { volatility: "low"|"med"|"high", newsProximity: bool, ... }
+  executionScores Json?   // { entryQuality: 0-10, exitDiscipline: 0-10, ... }
+  disciplineScore Int?    // TradeMind Discipline Score™ (0-100)
+  identityMetrics Json?   // Phase 3: 5-dimensional breakdown of discipline score for this specific trade
+  confidenceLevel Int?    // Pre-trade confidence 1-10
+  sleepQuality    Int?    // Sleep quality 1-5
+  fatigueLevel    Int?    // Fatigue level 1-5
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiAnalysis     AIAnalysis?
+  journalEntries JournalEntry[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, status])
+}
+
+model Strategy {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  conceptType String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  mood      String?
+  content   String   @db.Text
+  tradeId   String?
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trade Trade? @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model AIAnalysis {
+  id                String   @id @default(cuid())
+  tradeId           String   @unique
+  summary           String   @db.Text
+  mistakes          String[]
+  emotionalPatterns String[]
+  riskScore         Float?
+  qualityScore      Float?
+  rawResponse       Json
+  createdAt         DateTime @default(now())
+
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+}
+
+model Insight {
+  id          String   @id @default(cuid())
+  userId      String
+  text        String   @db.Text
+  category    String
+  severity    String?
+  generatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model MilestoneUnlock {
+  id          String   @id @default(cuid())
+  userId      String
+  milestoneId String
+  title       String
+  unlockedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, milestoneId])
+  @@index([userId])
+}
+
+model DisciplineSnapshot {
+  id         String   @id @default(cuid())
+  userId     String
+  score      Int
+  recordedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, recordedAt])
+}
+
+model SessionRecap {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  summary   Json
+  dismissed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  stripeSubscriptionId String   @unique
+  plan                 String
+  status               String
+  currentPeriodEnd     DateTime
+  createdAt            DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Phase 2: Cognitive Intelligence Models ─────────────────
+
+model BehaviorMemory {
+  id          String   @id @default(cuid())
+  userId      String
+  category    String   // "pattern" | "tendency" | "strength" | "trigger"
+  title       String
+  description String   @db.Text
+  evidence    Json     // Array of trade IDs and dates supporting this observation
+  confidence  Float    @default(0.5) // 0.0-1.0
+  firstSeen   DateTime @default(now())
+  lastSeen    DateTime @default(now())
+  occurrences Int      @default(1)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+  @@index([userId, isActive])
+}
+
+model CoachingSession {
+  id          String   @id @default(cuid())
+  userId      String
+  triggerType String   // "post_trade" | "streak_alert" | "daily_recap" | "pattern_detected"
+  traderState Json     // Snapshot of trader's current psychological state
+  aiResponse  String   @db.Text
+  aiTone      String   // "stabilizing" | "recovery" | "analytical" | "cautionary"
+  tradeId     String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
