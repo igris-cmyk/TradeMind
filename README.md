@@ -132,4 +132,6 @@ Fresh databases are reproducible from the checked-in migrations, starting with t
 
 ## License
 
-MIT
+## License
+
+Private project. All rights reserved.
